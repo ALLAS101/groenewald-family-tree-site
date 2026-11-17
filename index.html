@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Groenewald Family Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f6f1e7; --card:#fffdf8; --ink:#2a2420; --muted:#7a6f63; --line:#cbbfae;
+    --pat:#2f5d50; --pat-soft:#e3ece7; --mat:#8a4b3a; --mat-soft:#f3e4dd;
+    --you:#b8862b; --you-soft:#f7ecd4; --unk:#efe9df;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+  header{max-width:1200px;margin:0 auto;padding:36px 24px 8px}
+  h1{font-family:Fraunces,serif;font-size:34px;margin:0 0 4px;font-weight:700}
+  h2{font-family:Fraunces,serif;font-size:22px;margin:0 0 12px;font-weight:600}
+  .sub{color:var(--muted);margin:0}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+  main{max-width:1200px;margin:0 auto;padding:8px 24px 48px}
+  .tree-wrap{overflow-x:auto;padding:20px 0 8px}
+  .tree{min-width:900px;display:flex;flex-direction:column;gap:0}
+  .gen{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;align-items:stretch;position:relative}
+  .gen-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+  .p{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;transition:transform .12s, box-shadow .12s;min-height:74px}
+  .p:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(60,40,20,.10)}
+  .p.sel{outline:2px solid var(--ink);outline-offset:2px}
+  .p .n{font-weight:600;font-size:14px;line-height:1.3}
+  .p .r{font-size:12px;color:var(--muted);margin-top:3px}
+  .p.pat{border-left-color:var(--pat);background:linear-gradient(0deg,var(--card),var(--pat-soft))}
+  .p.mat{border-left-color:var(--mat);background:linear-gradient(0deg,var(--card),var(--mat-soft))}
+  .p.you{border-left-color:var(--you);background:var(--you-soft)}
+  .p.unk{background:var(--unk);border-style:dashed;border-left-style:solid}
+  .p.unk .n{color:var(--muted);font-weight:500;font-style:italic}
+  .span2{grid-column:span 2}.span4{grid-column:span 4}.span8{grid-column:span 8}
+  .center{grid-column:3 / span 4}
+  .conn{height:22px;display:grid;grid-template-columns:repeat(8,1fr);gap:10px}
+  .conn div{border:2px solid var(--line);border-top:none;border-radius:0 0 10px 10px;margin:0 22%}
+  .conn.c4 div{grid-column:span 4}.conn.c2 div{grid-column:span 2}
+  .conn.c1 div{grid-column:3 / span 4;margin:0 20%}
+  .panel{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;margin-top:28px;align-items:start}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  #detail .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:10px}
+  #detail .v{margin-top:2px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
+  .b-known{background:#dfeee3;color:#2f5d50}.b-res{background:#e7e3f3;color:#4b3f8a}.b-hyp{background:#f6e6c8;color:#8a5a12}.b-unk{background:#ece6dc;color:#7a6f63}
+  .line{position:relative;padding-left:22px;margin:0}
+  .line li{list-style:none;position:relative;padding:0 0 14px 0}
+  .line li::before{content:"";position:absolute;left:-17px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--pat)}
+  .line li::after{content:"";position:absolute;left:-13px;top:18px;bottom:-2px;width:1px;background:var(--line)}
+  .line li:last-child::after{display:none}
+  .line li.gap::before{background:transparent;border:2px dashed var(--muted);width:5px;height:5px}
+  .line .y{font-size:12px;color:var(--muted)}
+  .todo li{margin-bottom:8px}
+  a{color:var(--pat)}
+  .src{font-size:13px;color:var(--muted)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(30,22,15,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:40px 16px}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--card);border-radius:16px;max-width:720px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative}
+  .modal h3{font-family:Fraunces,serif;font-size:26px;margin:0 0 2px}
+  .modal .msub{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .modal table{width:100%;border-collapse:collapse;margin:6px 0 10px}
+  .modal td{padding:7px 8px;border-top:1px solid #eee3d3;vertical-align:top;font-size:14px}
+  .modal td:first-child{color:var(--muted);width:30%;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;padding-top:9px}
+  .modal .story p{margin:8px 0;line-height:1.6}
+  .modal .msrc{font-size:13px;color:var(--muted);margin-top:12px;border-top:1px solid #eee3d3;padding-top:10px}
+  .modal .x{position:absolute;top:12px;right:14px;border:none;background:none;color:var(--muted);font-size:26px;cursor:pointer;color:var(--muted)}
+  #full g[data-pid]{cursor:pointer}
+  #full g[data-pid]:hover rect:first-child{stroke:#2a2420;stroke-width:1.5}
+  @media (max-width:860px){.panel{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>The Groenewald Family</h1>
+  <p class="sub">Aldre's ancestors on both sides. Click anyone to see what's known about them.</p>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--you)"></i>You</span>
+    <span><i class="sw" style="background:var(--pat)"></i>Father's side (Groenewald &amp; van der Walt)</span>
+    <span><i class="sw" style="background:var(--mat)"></i>Mother's side (Vos &amp; Groenink)</span>
+    <span><i class="sw" style="background:var(--unk);border:1px dashed var(--muted)"></i>Not yet known</span>
+  </div>
+</header>
+
+<main>
+  <div class="box" style="margin-top:16px">
+    <h2>Full family tree · 1690 to today</h2>
+    <p style="margin:0 0 8px"><a href="big-tree.html" style="font-weight:600">→ Open the Big Tree: all 320+ known ancestors back to the 1500s, how the family split, and where the lines meet</a></p>
+    <p class="sub" style="margin-bottom:10px">Ten generations, from Christoph Grünwald's arrival at the Cape down to you. Every Groenewald generation is backed by church, civil or probate records. <b>Click any person</b> to see everything known about them.</p>
+    <div style="overflow-x:auto"><svg id="full" xmlns="http://www.w3.org/2000/svg" style="display:block;min-width:900px;width:100%;height:auto"></svg></div>
+    <div class="legend" style="margin-top:8px">
+      <span><i class="sw" style="background:var(--pat)"></i>Groenewald</span>
+      <span><i class="sw" style="background:#b07d1e"></i>Cox</span>
+      <span><i class="sw" style="background:#5b6f8f"></i>Married in</span>
+      <span><i class="sw" style="background:var(--mat)"></i>Vos &amp; Groenink</span>
+      <span>⚭ married</span>
+    </div>
+  </div>
+  <h2 style="margin:30px 0 0">Close family</h2>
+  <p class="sub">Click anyone to see everything known about them.</p>
+  <div class="tree-wrap"><div class="tree" id="tree"></div></div>
+
+  <div class="panel">
+    <div class="box" id="detail"><h2>Select a person</h2><p class="sub">Click any card in the tree above.</p></div>
+
+    <div class="box">
+      <h2>The Groenewald line in South Africa</h2>
+      <p class="src" style="margin-top:-4px"><b>Proven, generation by generation.</b> Each Groenewald parent–child link from step 4 down to step 7 is backed by a baptism or death-notice record. Steps 1–3 come from the standard, record-based Cape genealogies.</p>
+      <ul class="line">
+        <li><b>1 · Christoph Grünwald</b> <span class="badge b-res">Documented</span><br><span class="y">c.1670 – 1721 · Königsberg → the Cape, 1690</span><br>A VOC corporal. Married Catharina Niemand of Amsterdam in Cape Town in 1691. He's the stamvader of the South African Groenewalds.</li>
+        <li><b>2 · Coenraad Groenewald</b> <span class="badge b-res">Documented</span><br><span class="y">c.1698 · Stellenbosch</span><br>Married Catharina Loos in 1719.</li>
+        <li><b>3 · Coenraad Groenewalt</b> <span class="badge b-res">Documented</span><br><span class="y">bapt. 1731 – d. 1813 · Stellenbosch</span><br>Married Maria Sophia Maree, who was of French Huguenot descent.</li>
+        <li><b>4 · Coenraad Adolph Groenewald</b> <span class="badge b-res">Documented</span><br><span class="y">bapt. 14 Sep 1788, Stellenbosch · d. 3 May 1840, Klipdrift, Napier</span><br>Born on the farm Zeekoejagt near Riviersonderend. He's the <b>first "Coenraad Adolph"</b> found in the records. Married Susara Johanna Matthee in 1810.</li>
+        <li><b>5 · Casparus Johannes Groenewald</b> <span class="badge b-res">Documented</span><br><span class="y">c.1830 – 1914 · Klippedrift, Bredasdorp</span><br>Married Maria Elizabeth Christina van Dyk (1838–1915).</li>
+        <li><b>6 · Coenraad Adolph Groenewald</b> <span class="badge b-res">Documented</span><br><span class="y">b. 27 Feb 1857 · bapt. 19 Apr 1857, Swellendam · d. 22 May 1936, Wepener</span><br>Your great-great-grandfather. His baptism record names his parents as Casparus Johannes Groenewald and Maria Elizabeth Christina van Dyk (step 5), and the birth date matches his gravestone. His first wife, Anna Louisa Sophia Swart (m. 1882), died in 1901. In 1908 he married <b>Magdalena Sophia Maria Cox</b> (1886–1960) in Wepener. The family moved back and forth between the Free State and the southern Cape. Their children included Coenraad Adolf (b. 1912, Wepener), Johanna Dorothea (b. 1913, Hobhouse), Michiel William (b. 1918, Napier), Maria Elizabeth (b. 1920, Napier), Amelia Elizabeth (b. 1922, Bredasdorp), <b>Pieter Andries (b. 1923, Riversdale)</b>, William John (b. 1926), Dorothea William (b. 1927) and Paulina Susanna Carolina (b. 1929, Wepener).</li>
+        <li><b>7 · Pieter Andries Groenewald</b> <span class="badge b-res">Documented</span><br><span class="y">b. 29 Nov 1923 · bapt. 20 Aug 1924, Riversdale (NG Kerk) · m. 19 Nov 1943, Grasland, Bloemfontein</span><br>Your great-grandfather. He was a railway worker at 19 when he married <b>Dorothea Magdalena Cox</b> (b. 27 Feb 1926, Wepener). His mother Magdalena Sophia Maria Cox and Dorothea's father Thomas Jesaja Cox were brother and sister, so <b>the couple were first cousins</b>. That was legal, and not unusual in farming communities at the time.</li>
+        <li><b>8 · Coenraad Adolf Groenewald</b> <span class="badge b-known">Known</span><br><span class="y">1944 – 2026 · Free State → Randfontein</span><br>Your grandfather, named after his grandfather (step 6), following the naming custom. Married Susanna Maria van der Walt. Served on the border, and ran his own farm-equipment repair business, Agri Services. Brother of Pieter Andries.</li>
+        <li><b>9 · Pieter Andries Groenewald</b> <span class="badge b-known">Known</span><br><span class="y">Your father</span></li>
+        <li><b>10 · Aldre Groenewald</b> <span class="badge b-known">Known</span><br><span class="y">b. 2003 · Krugersdorp</span></li>
+      </ul>
+      <p class="src"><b>How certain is the Cox link?</b> Magdalena Sophia Maria Cox's baptism (Smithfield, 1887; b. 27 Sep 1886) names her parents as William John Cox and Magdalena Sophia Maria Swanepoel, so that is proven. No baptism has been found yet for Thomas Jesaja Cox (b. 1888, Rouxville) that names his parents. His place in the family comes from the FamilySearch tree, and it fits the family's places and names. His 1974 estate file would confirm it.</p>
+      <p class="src"><b>The Cox family:</b> through both of your great-grandparents you descend <b>twice</b> from William John Cox (1853–1943) and Magdalena Sophia Maria Swanepoel (1854–1945), who married in Aliwal North in 1875. Their children included Magdalena Sophia Maria (your great-great-grandmother), Thomas Jesaja (1888–1974, your other great-great-grandfather, who married Dorothea Magdalena de Wet in Wepener in 1911) and a Petrus Andries Cox (b. 1893). The name Pieter Andries may have come from that uncle.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="box">
+      <h2>The van der Walt line (Grandma Susanna's family)</h2>
+      <ul class="line">
+        <li><b>Geele Andriesz van der Walt</b> <span class="badge b-res">Research</span><br><span class="y">c.1700 · Veenwouden, Friesland → the Cape, 16 March 1727</span><br>He sailed to the Cape as a VOC sailor on the <i>Huis te Assenburg</i> and became a free burgher in 1735. He married Johanna Weyers in Stellenbosch on 16 Nov 1742. He's the stamvader of the South African van der Walts, and the family celebrates 300 years in 2027.</li>
+        <li><b>His sons</b> <span class="badge b-res">Research</span><br><span class="y">baptised 1745–1757</span><br>Hendrik, Tiaardt, Johannes Petrus and Klaas. The van der Walt branches descend from these sons.</li>
+        <li class="gap"><b>About 6 generations not yet traced</b><br><span class="y">1750s – 1910s</span></li>
+        <li><b>Susanna Maria van der Walt</b> <span class="badge b-known">Known</span><br><span class="y">Your grandmother · married Coenraad Adolf Groenewald</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Your generation, in short</h2>
+      <p>You were born in <b>2003</b>, so you're part of <b>Generation Z</b>. Your grandfather was born in <b>1944</b>, during the Second World War, which puts him in the Silent Generation, right at the edge of the baby boomers.</p>
+      <p>Counting back through the Groenewald name, you're the <b>10th generation</b> since Christoph Grünwald arrived at the Cape in 1690, and the 9th born in South Africa. Every step is now backed by records. Through Grandma Susanna, you also descend from the van der Walts, who have been in South Africa for about <b>9–10 generations</b>.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="box">
+      <h2>What would unlock the next generation</h2>
+      <ol class="todo">
+        <li><b>Oupa Marthinus Johannes Vos's parents, or his birth year and town.</b> That would show which Vos line he belongs to. The Groenink side is now traced back to Steenwijk in the Netherlands.</li>
+        <li><b>Where Grandpa Coenraad was born (1944), and Grandma Susanna's birth year and town.</b> With these, I can search Dutch Reformed Church (NGK) baptism registers, estate files (death notices list parents and children) and eGGSA gravestone records.</li>
+        <li><b>Grandma Susanna van der Walt's parents.</b> A G.C. v.d. Walt witnessed the 1943 wedding, so her family may have been from the Bloemfontein area too.</li>
+      </ol>
+    </div>
+    <div class="box">
+      <h2>Sources</h2>
+      <p class="src">
+        <a href="https://www.stamouers.com/stamouers/d-g/188-groenewald-christoph">Stamouers: Christoph Groenewald (Grünwald)</a><br>
+        <a href="https://www.e-family.co.za/ffy/g0/p517.htm">e-family.co.za: Coenraad Groenewald (c.1699)</a><br>
+        <a href="https://www.wikitree.com/wiki/Groenewald-611">WikiTree: Coenraad Adolph Groenewald (1788–1840)</a><br>
+        <a href="https://www.wikitree.com/wiki/Groenewald-2164">WikiTree: Pieter Andries Groenewald (c.1924) m. Dorothea Magdalena Cox, 1943</a><br>
+        <a href="https://www.wikitree.com/wiki/Groenewald-789">WikiTree: Coenraad Adolph Groenewald (1857–1936), Wepener</a><br>
+        <a href="https://www.familysearch.org/ark:/61903/1:1:6ZCM-PZ7S">FamilySearch: 1943 marriage, Pieter Andries Groenewald &amp; Dorothea Magdalena Cox</a><br>
+        <a href="https://www.familysearch.org/ark:/61903/1:1:66JL-73JZ">FamilySearch: Riversdale NG Kerk baptism of Pieter Andries Groenewald, 20 Aug 1924</a><br>
+        <a href="https://www.familysearch.org/en/tree/person/details/PZZG-SL4">FamilySearch: Thomas Jesaja Cox (1888–1974) and family</a><br>
+        FamilySearch: baptism of Coenraad Adolph Groenewald, 19 Apr 1857, Swellendam NG Kerk (Cape Town Archives registers)<br>
+        FamilySearch: baptism of Magdalena Sofia Maria Cox, 17 Jul 1887, Smithfield (Free State NG Kerk records)<br>
+        <a href="https://e-family.co.za/ffy/g6/p6827.htm">e-family.co.za: Geele Andriesz van der Walt</a><br>
+        <a href="https://vdw300-portal.pages.dev/">Van der Walt 300 (1727–2027)</a><br><br>
+        Everything marked <span class="badge b-known">Known</span> comes from you. <span class="badge b-res">Documented</span> means it's from church, civil or probate records published by genealogists. <span class="badge b-hyp">Likely</span> means it's strongly supported but not fully proven. <span class="badge b-hyp">Possible link</span> means it's a lead that hasn't been proven yet.
+      </p>
+    </div>
+  </div>
+</main>
+<div class="modal-bg" id="mbg"><div class="modal" id="modal"></div></div>
+
+<script>
+const WT="https://www.wikitree.com/wiki/", FS="https://www.familysearch.org/en/tree/person/details/";
+const PEOPLE={
+christoph:{name:"Christoph Grünwald (Groenewald)",sub:"Your 7× great-grandfather · Gen 1 · the stamvader",status:"doc",
+ facts:[["Born","c.1670, Königsberg, Prussia (today Kaliningrad, Russia)"],["Arrived at the Cape","1690, as a corporal in the service of the Dutch East India Company (VOC)"],["Married","11 Nov 1691, Dutch Reformed Church, Cape Town, to Catharina Niemand of Amsterdam"],["Occupation","Soldier, then free burgher and blacksmith (grofsmid) in Cape Town, 1691–1707; later a farmer near Stellenbosch"],["Died","1721"],["Children","Johannes (bapt. 16 Sep 1696) · Coenraad (c.1698, your ancestor) · Christoffel (bapt. 25 Jul 1700) · Francina (bapt. 10 Sep 1702)"]],
+ story:`<p>Christoph signed his own name <i>Grünwald</i>. At the Cape it was changed to the Dutch form <b>Groenewald</b>, and he became known as Christoffel. Every Groenewald family in South Africa traces back to him.</p>
+<p>He arrived in 1690 as a corporal for the VOC and soon became a <b>free burgher</b>, which meant he could work for himself. He was a blacksmith in Cape Town until about 1707. In 1701 he was granted the farm <b>Houd-den-Beck</b> near Stellenbosch (later called Houd-den-Mond, and Bellevue from 1851). Between 1705 and 1708 he also bought the farm <b>Groenkloof</b>, north-east of Stellenbosch.</p>
+<p>Like many Cape colonists of his time, he owned enslaved people. Records show that in 1695 he bought Domingo van Aroe, aged 15, and Ismael van Macassar, and in 1696 Anna van Malabar. Under the terms of his will, <b>Tamoer van Macassar was freed</b> on 7 September 1721, with the agreement of his three sons.</p>
+<p>In 1719 he asked the authorities to declare his sons Coenraad (20) and Christoffel (18) legally of age, which is called <i>veniam aetatis</i>.</p><p><b>On Geni (unverified):</b> one Geni profile gives his birth as c.1665, his father as <i>Johannes Grunwald</i> (c.1636, Germany). The same profile lists a daughter, <i>Flora van de Caap</i>, with Anna van Malabar, the enslaved woman he bought in 1696. None of this has sources, and WikiTree's checked profile lists his parents as unknown, so treat these as leads.</p>`,
+ src:[["WikiTree: Christoph Grünwald",WT+"Gr%C3%BCnwald-10"],["Stamouers: Groenewald, Christoph","https://www.stamouers.com/stamouers/d-g/188-groenewald-christoph"]]},
+niemand:{name:"Catharina Niemand",sub:"Your 7× great-grandmother · Gen 1",status:"doc",
+ facts:[["Born","c.1675 (some sources say 1663), Amsterdam, Netherlands"],["Married","11 Nov 1691, Cape Town, to Christoph Grünwald"],["Died","c.1702, Cape Town"],["Children","Johannes (1696) · Coenraad (c.1698) · Christoffel (1700) · Francina (1702)"]],
+ story:`<p>Catharina came from Amsterdam and married Christoph at the Dutch Reformed Church in Cape Town. She was probably still a teenager. She seems to have died around 1702, soon after the baptism of her youngest child, Francina, which would make her only in her twenties.</p>`,
+ src:[["WikiTree: Catharina Niemand",WT+"Niemand-18"],["e-family: Coenraad Groenewald (her son)","https://www.e-family.co.za/ffy/g0/p517.htm"]]},
+c1698:{name:"Coenraad Groenewald",sub:"Your 6× great-grandfather · Gen 2",status:"doc",
+ facts:[["Born","c.1698, at the Cape. His baptism is missing because the Cape Town register has a gap from late 1697 to 1699."],["Parents","Christoph Grünwald & Catharina Niemand"],["Married","24 Sep 1719, Stellenbosch, to Catharina Loos (he was 21, she was 18)"],["Children","Christoffel · Catrina Elisabeth · Francina (m. Vermeulen) · Hendrik · Hendrik · Coenraad (bapt. 1731, your ancestor)"]],
+ story:`<p>Coenraad is the <b>first Coenraad</b> in a name that has now been handed down for over 300 years, all the way to your grandfather. In 1719 his father had him declared legally of age at 20, and that same year he married Catharina Loos at Stellenbosch.</p><p>His wife died in 1734, when the children were still young.</p>`,
+ src:[["WikiTree: Coenraad Groenewald",WT+"Groenewald-69"],["e-family.co.za","https://www.e-family.co.za/ffy/g0/p517.htm"]]},
+loos:{name:"Catharina Loos (Loots)",sub:"Your 6× great-grandmother · Gen 2",status:"doc",
+ facts:[["Baptised","21 Aug 1701, Dutch Reformed Church, Stellenbosch (witnesses Abraham de Clerk & Catharina la Fèbre)"],["Parents","Hinrich Loos (c.1659–after 1728), from Olfen, Germany · Lijsbeth Jansz van de Caab (c.1662–before 1727)"],["Married","24 Sep 1719, Stellenbosch, to Coenraad Groenewald"],["Died","20 Jan 1734, aged 32"]],
+ story:`<p>Catharina's father was a German immigrant. Her mother, <b>Lijsbeth Jansz van de Caab</b>, was born at the Cape around 1662, only ten years after the colony was founded. "Van de Caab" simply means "of the Cape". It was the surname given to people born there, often children of enslaved or mixed parentage, and Lijsbeth's own parents aren't known for certain. Genealogists think she may have been the daughter of a woman called Regina van Rapenberg.</p><p>Catharina died young, at 32, leaving several children.</p>`,
+ src:[["WikiTree: Catharina Loots",WT+"Loots-172"],["WikiTree: Lijsbeth van de Caab",WT+"Van_de_Caab-3"]]},
+c1731:{name:"Coenraad Groenewalt (Groenewald)",sub:"Your 5× great-grandfather · Gen 3",status:"doc",
+ facts:[["Baptised","8 Apr 1731, Stellenbosch"],["Parents","Coenraad Groenewald & Catharina Loos"],["1st marriage","14 May 1758, to Johanna Susanna Fourie"],["2nd marriage","21 Jul 1765, Stellenbosch, to Maria Sophia Maree (he was a widower of 34; she was about 17)"],["Died","28 May 1813"],["Children","About 15, including Lucas Johannes (1770), Christoffel Petrus (1776), Hendrik, Rosina Francina (m. Bester), Johanna Susanna (m. Swart), Magdalena (m. van Dyk) and his youngest son, Coenraad Adolph (1788), your ancestor"]],
+ story:`<p>Coenraad lost his mother when he was 2. He married twice and had a very large family. The family farmed in the <b>Riviersonderend</b> area of the Overberg, and his widow is recorded as living at <i>de Matjes Kuijl</i> on the Rivier zonder End.</p><p>He appears in the classic reference book <i>Genealogies of Old Cape Families</i> (De Villiers & Pama), Groenewald, page 282.</p>`,
+ src:[["WikiTree: Coenraad Groenewalt",WT+"Groenewalt-20"]]},
+maree:{name:"Maria Sophia Maree (Marais)",sub:"Your 5× great-grandmother · Gen 3",status:"doc",
+ facts:[["Baptised","28 Jul 1748"],["Parents","Lucas Marthinus Marre (Maree) & Maria Jordaan"],["Married","21 Jul 1765, Dutch Reformed Church, Stellenbosch, to Coenraad Groenewald (a widower)"],["Lived","de Matjes Kuijl, on the Rivier zonder End (Riviersonderend)"],["Died","1812"],["Surviving children (per estate)","Lucas Johannes · Christoffel Petrus · Hendrik · Coenraad Adolph · Catharina · Francina (m. Willem Bester) and others"]],
+ story:`<p>Through Maria you have <b>French Huguenot ancestry</b>. Her grandfather was Ignace Maré, who came from France, and her other ancestors include the Huguenot families Jourdan and le Roux. The Huguenots were Protestant refugees who settled at the Cape around 1688.</p><p>She married when she was about 17 and became stepmother to her husband's children from his first marriage.</p>`,
+ src:[["WikiTree: Maria Sophia Maree",WT+"Maree-51"]]},
+ca1788:{name:"Coenraad Adolph Groenewald",sub:"Your 4× great-grandfather · Gen 4 · the first Coenraad Adolph",status:"doc",
+ facts:[["Born","1788, on the farm Zeekoejagt, Riviersonderend"],["Baptised","14 Sep 1788, Stellenbosch. The register reads: <i>Coenraad Adolph, de vader is Coenraad Groenewald, de moeder Maria Marais</i>."],["Married","6 Jun 1810, Stellenbosch, to Susara Johanna Matthee"],["Died","3 May 1840, Klipdrift, Napier (death notice KAB MOOC 6/9/21 4306)"],["Children (from his death notice)","Sara Johanna · Coenraad Adolph (1813–1887) · Michiel Petrus (1815–1869) · Lucas Johannes (1816–1888) · Abraham Johannes (1818–1880) · Maria Elizabeth · Hendrik Jacobus (1822–1909) · Johanna Magdalena · Johanna Petronella · Francina Catharina (1829–1917) · <b>Casparus Johannes (1830–1914)</b> · Anna Catharina (1833–1917) · Elizabeth Frederika Maria"]],
+ story:`<p>He was the youngest son of a family of about 15 children. He's the <b>first person in the records with the name "Coenraad Adolph"</b>, which was passed down through his descendants to your great-great-grandfather and your grandpa.</p><p>He and Susara had 13 children and farmed at <b>Klipdrift near Napier</b>, in the Overberg. He died at 51.</p>`,
+ src:[["WikiTree: Coenraad Adolph Groenewald (1788–1840)",WT+"Groenewald-611"]]},
+matthee:{name:"Susara Johanna Matthee",sub:"Your 4× great-grandmother · Gen 4",status:"doc",
+ facts:[["Born","1793, Swellendam"],["Baptised","21 Jul 1793, Cape Town"],["Parents","Michiel Matthee (1758–1835) & Sara Anna Bester (1765–1843)"],["Married","6 Jun 1810, Stellenbosch, to Coenraad Adolph Groenewald (she was about 17)"],["Died","4 Jan 1860, Napier (death notice KAB MOOC 6/9/89 6603)"],["Children","13 (see her husband)"]],
+ story:`<p>The Matthee family descends from <b>Abraham Matthé of Tramelan, in the canton of Bern, Switzerland</b>, so through Susara you also have Swiss ancestry.</p><p>She was widowed at 47 with a large family, and lived another 20 years at Napier.</p>`,
+ src:[["WikiTree: Susara Johanna Matthee",WT+"Matthee-171"]]},
+casparus:{name:"Casparus Johannes Groenewald",sub:"Your 3× great-grandfather · Gen 5",status:"doc",
+ facts:[["Born","c. 5 Nov 1830, Klippedrift, Bredasdorp district"],["Parents","Coenraad Adolph Groenewald & Susara Johanna Matthee (he's listed in his father's 1840 death notice)"],["Married","10 Sep 1855, Napier, to Maria Elizabeth Christina van Dyk (he was 24, she was 17)"],["Died","5 Dec 1914"],["Children","Coenraad Adolph (1857, your ancestor) · Johanna Petronella · and, according to family trees, Sophia Margaretha Johanna, Michiel Burgert Petrus, Casparus Cornelis Matthys, Louis Peter and Andries Nicolaas"]],
+ story:`<p>Casparus was 9 when his father died. He spent his life in the <b>Bredasdorp–Napier</b> farming area and lived to about 84, long enough to see his grandchildren born.</p>`,
+ src:[["WikiTree: Casparus Johannes Groenewald",WT+"Groenewald-610"]]},
+vandyk:{name:"Maria Elizabeth Christina van Dyk",sub:"Your 3× great-grandmother · Gen 5",status:"doc",
+ facts:[["Born","4 Apr 1838"],["Christened","29 Jul 1838, Caledon"],["Parents","Michiel Burgert van Dyk (1813–1899, Zoutrivier, Bredasdorp) & Maria Sophia Margaretha Gildenhuys"],["Married","10 Sep 1855, Napier, to Casparus Johannes Groenewald"],["Died","26 Dec 1915, Napier, aged 77"]],
+ story:`<p>She married at 17 and spent her whole life in the Overberg. She died a year after her husband. Her son Coenraad Adolph's baptism record names her as his mother.</p>`,
+ src:[["WikiTree: Maria E. C. van Dyk",WT+"Van_Dyk-736"]]},
+wjcox:{name:"William John Cox (“Willem Jan”)",sub:"Your 3× great-grandfather, twice over · Gen 5",status:"tree",
+ facts:[["Born","1853, Camberwell, Surrey (London), England"],["Parents","John Cox (1832–1901) & Eliza Stephens (1831–1858)"],["Brothers","Samuel Stephens Cox (1855–1910) · half-brother Frederick Andrew Cox (1858–1942)"],["Married","10 May 1875, Aliwal North, to Magdalena Sophia Maria Swanepoel"],["Church","Became a member of the Dutch Reformed Church: Rouxville (13 Dec 1884), Smithfield (1887), Wepener (9 Dec 1894)"],["Died","6 Jun 1943, Wepener, aged about 90"],["Children (10)","William James (1879–1964) · Amelia Elizabeth (1883–1927) · <b>Magdalena Sofia Maria (1886–1960)</b> · <b>Thomas Jesaja (1888–1974)</b> · Eliza Elizabeth (1892) · Petrus Andries (1893) · Cecilia Cornelia Margaretha (1894) · Johanna Dorothea (1896) · John Ruben · Sophia Maria"]],
+ story:`<p>William John was an <b>Englishman from London</b>, which gives you English ancestry. He came to South Africa as a young man, married an Afrikaans girl at Aliwal North, joined the Dutch Reformed Church and became <b>"Willem Jan"</b>. The family lived in the southern Free State, at Rouxville, Smithfield and then Wepener.</p><p>In 1908 his daughter Magdalena married Coenraad Adolph Groenewald <b>at his home in Wepener</b>. He died in June 1943, just five months before two of his grandchildren, Pieter Andries Groenewald and Dorothea Cox, married each other.</p>`,
+ src:[["FamilySearch tree: William John Cox (23 sources)",FS+"GZD7-XC7"]]},
+swanepoel:{name:"Magdalena Sophia Maria Swanepoel",sub:"Your 3× great-grandmother, twice over · Gen 5",status:"tree",
+ facts:[["Born","12 Oct 1854, Orange Free State"],["Baptised","7 Dec 1854, Burgersdorp"],["Parents","<b>Pieter Andries Swanepoel</b> (b. 1820) & Cecilia Cornelia Margaretha van der Merwe (b. 1816), married 1841 at Colesberg"],["Married","10 May 1875, Aliwal North, to William John Cox (she was 20)"],["Died","21 Jan 1945, Wepener, aged 90"]],
+ story:`<p>Her father was called <b>Pieter Andries</b> Swanepoel. Her son Petrus Andries Cox (1893) was named after him, and the name very likely passed through the Cox family to your great-grandfather, your dad and so on. That's probably where the name <b>Pieter Andries</b> in your family comes from.</p><p>She had at least 10 children, lived to 90, and was alive when her great-grandson, your grandpa, was born in 1944.</p>`,
+ src:[["FamilySearch tree: Magdalena S. M. Swanepoel (25 sources)",FS+"GCLS-8RS"]]},
+ca1857:{name:"Coenraad Adolph Groenewald",sub:"Your great-great-grandfather · Gen 6 · Grandpa's grandfather",status:"doc",
+ facts:[["Born","27 Feb 1857 (date on his gravestone and in his baptism record)"],["Baptised","19 Apr 1857, Swellendam. Parents: Casparus Johannes Groenewald & Maria Elizabeth Christina van Dyk."],["1st marriage","24 Oct 1882, Dutch Reformed Church, Bredasdorp, to Anna Louisa Sophia Swart (1860–1901), by Ds C. Marais"],["2nd marriage","16 Nov 1908, at the home of W. Cox in Wepener, to Magdalena Sophia Maria Cox (he was a widower of 51, she was 22). They were married by Ds E. Dommisse, with J.R. Cox and C. Nortje as witnesses."],["Children, 1st marriage","Anna Maria Fransina (m. Prinsloo) · Casparus Cornelis · Maria Elizabeth · Dirk Johannes (1893–1972) · Sofia Margaretha · and others"],["Children, 2nd marriage","Coenraad Adolf (1912, Wepener) · Johanna Dorothea (1913, Hobhouse) · Michiel William (1918, Napier) · Maria Elizabeth (1920, Napier) · Amelia Elizabeth (1922, Bredasdorp) · <b>Pieter Andries (1923, Riversdale)</b> · William John (1926, Wepener) · Dorothea William (1927, Wepener) · Paulina Susanna Carolina (1929, Wepener) · John Ruben · Andries Nicolaas and others"],["Died","22 May 1936, Wepener, aged 79"],["Buried","Wepener main cemetery. His gravestone was photographed for eGGSA in 2010."]],
+ story:`<p>Your grandpa was named after this man. He grew up in the Overberg, married there, and lost his first wife in 1901. He then moved to the Free State and in 1908 married a much younger second wife in Wepener.</p><p>The baptism places of his children show the family <b>moving back and forth between the southern Cape (Napier, Bredasdorp, Riversdale) and the Free State (Wepener, Hobhouse)</b>. He had more than 15 children altogether, and was 72 when his youngest was born.</p>`,
+ src:[["WikiTree: Coenraad Adolph Groenewald (1857–1936)",WT+"Groenewald-789"],["FamilySearch: Pieter Andries's 1924 baptism (names him as father)","https://www.familysearch.org/ark:/61903/1:1:66JL-73JZ"]]},
+msmcox:{name:"Magdalena Sophia Maria Cox (“Maggie”)",sub:"Your great-great-grandmother · Gen 6",status:"doc",
+ facts:[["Born","27 Sep 1886"],["Baptised","1887, Smithfield. Parents: Willem Jan (William John) Cox & Magdalena Sofia Maria Swanepoel. Witnesses: Jacob J. Swanepoel & Levina C. Venter."],["Confirmed","20 Oct 1903, Dutch Reformed Church, aged 17, by Ds E. Dommisse"],["1st marriage","16 Nov 1908, at her father's home in Wepener, to Coenraad Adolph Groenewald (1857–1936)"],["2nd marriage","About 1936, after she was widowed, to Lowies Johannes Kleynhans"],["Died","21 Feb 1960, Wepener, aged 73 (estate file VAB MHG 323/60)"],["Children","At least 12. Her estate file lists Magdalena, Eliza (Labuschagne), John Ruben, Coenraad Adolph, Johanna (Smith), Andries Nicolaas, Machiel and Maria (Botha). Church records add Johanna Dorothea, Maria Elizabeth, Amelia Elizabeth, <b>Pieter Andries</b>, William John, Dorothea William and Paulina."]],
+ story:`<p>Maggie was half-English through her father. She married at 22 a widower who was 29 years older, and spent the next 28 years having children while the family moved between the Free State and the Cape.</p><p>Her son <b>Pieter Andries</b> later married her niece Dorothea, the daughter of her brother Thomas.</p><p>Note: the online index of her 1960 estate file doesn't list Pieter Andries. That may just be because the index is incomplete, so the original document would be worth checking.</p>`,
+ src:[["WikiTree: Magdalena Sophia Maria Cox",WT+"Cox-19095"]]},
+thomas:{name:"Thomas Jesaja Cox",sub:"Your great-great-grandfather · Gen 6 · Dorothea's father",status:"tree",
+ facts:[["Born","1 Sep 1888, Rouxville, Orange Free State"],["Name variants","Thomas Jozua / Joshua / Josiah / Isaja / Esaias Cox"],["Married","18 Dec 1911, Wepener, to Dorothea Magdalena de Wet"],["Children","Magdalena Sophia Maria (1915) · William John (1917) · Hendrik Willem de Wet (1920) · Thomas Esaias (1923) · <b>Dorothea Magdalena (1926)</b> · Abraham Liembreg (1928) · and at least one more"],["1943","Witness at his daughter's wedding, signing as “T.J. Cox”"],["Died","11 Mar 1974, Bloemfontein, aged 85 (estate file 1974)"]],
+ story:`<p>Thomas named his eldest son <b>William John</b> and his eldest daughter <b>Magdalena Sophia Maria</b>, exactly the names of William John Cox and his wife. Under the Afrikaans naming custom, the first son and daughter are named after the father's parents, so this strongly supports him being their son, and Maggie Cox's brother.</p><p>His wife died in 1945. FamilySearch has civil marriage records from 1946 and 1950 attached to his profile, so he may have remarried.</p>`,
+ src:[["FamilySearch tree: Thomas Jesaja Cox (11 sources)",FS+"PZZG-SL4"]]},
+dewet:{name:"Dorothea Magdalena de Wet",sub:"Your great-great-grandmother · Gen 6 · Dorothea's mother",status:"tree",
+ facts:[["Born","8 Apr 1894, Bethulie, Orange Free State"],["Baptised","26 Jan 1896, Smithfield"],["Parents","Hendrik Willem de Wet (1865–1916) & Martha Catharina Elizabeth de Jager, married 3 Jan 1887 at Bethulie"],["Siblings","One of 13 children"],["Married","18 Dec 1911, Wepener, to Thomas Jesaja Cox (she was 17)"],["Died","29 Apr 1945, Kerelaw, Free State, aged 51"]],
+ story:`<p>She married at 17, as her daughter Dorothea later did. She named her second son <b>Hendrik Willem de Wet Cox</b> after her own father. She died in 1945, 18 months after her daughter's wedding and a few months after her first grandson, your grandpa, was born.</p>`,
+ src:[["FamilySearch tree: Dorothea Magdalena de Wet (13 sources)",FS+"KGMR-WYG"]]},
+pa1923:{name:"Pieter Andries Groenewald",sub:"Your great-grandfather · Gen 7",status:"doc",
+ facts:[["Born","29 Nov 1923"],["Baptised","20 Aug 1924, Dutch Reformed Church, Riversdale, Cape Province"],["Parents","Coenraad Adolph Groenewald (1857–1936) & Magdalena Sophia Maria Cox"],["In 1943","Aged 19, a bachelor and a <b>railway worker</b> (spoorwegwerker), living at Rodenbeck, Bloemfontein district"],["Married","19 Nov 1943 at Grasland, Bloemfontein district, to his cousin Dorothea Magdalena Cox (17). Married after banns, without an antenuptial contract, by A.R. Carter of the <b>Full Gospel Church</b> (Volle Evangelie Kerk), with a parent's consent. Witnesses: G.C. v.d. Walt and T.J. Cox."],["Children","Coenraad Adolf (1944–2026, your grandpa) · Pieter Andries (your great-uncle) · possibly others"],["Died","Date not yet found (shown as deceased on FamilySearch)"]],
+ story:`<p>He was born in the southern Cape when his father was already 66, and grew up partly in Wepener. His father died when he was 12. By 19 he was working on the railways near Bloemfontein. The family had been Dutch Reformed, but he married in the Full Gospel (Pentecostal) church.</p><p>His wife was his first cousin: her father Thomas was his mother's brother.</p>`,
+ src:[["FamilySearch: 1924 baptism, Riversdale","https://www.familysearch.org/ark:/61903/1:1:66JL-73JZ"],["FamilySearch: 1943 marriage record","https://www.familysearch.org/ark:/61903/1:1:6ZCM-PZ7S"],["FamilySearch tree: Pieter Andries Groenewald",FS+"GNQB-N6P"]]},
+dorothea:{name:"Dorothea Magdalena Cox",sub:"Your great-grandmother · Gen 7",status:"doc",
+ facts:[["Born","27 Feb 1926, Wepener, Orange Free State"],["Baptised","9 May 1926, Wepener"],["Parents","Thomas Jesaja Cox & Dorothea Magdalena de Wet"],["In 1943","Aged 17, a spinster (jongdogter) and housewife (huisvrou), living at Plot 142, Grasland, Bloemfontein district"],["Married","19 Nov 1943, Grasland, to Pieter Andries Groenewald, with her parents' consent"],["Children","Coenraad Adolf (1944) · Pieter Andries · possibly others"],["Died","Date not yet found (shown as deceased on FamilySearch)"]],
+ story:`<p>Dorothea was the 5th of at least 7 children. She married at 17 and had your grandpa the following year. Her mother died in April 1945, when Dorothea was only 19 and a new mother herself.</p>`,
+ src:[["FamilySearch tree: Dorothea Magdalena Cox",FS+"GNQB-642"],["FamilySearch: 1943 marriage record","https://www.familysearch.org/ark:/61903/1:1:6ZCM-PZ7S"]]},
+ca1944:{name:"Coenraad Adolf Groenewald",sub:"Your grandfather · Gen 8",status:"known",
+ facts:[["Born","1944"],["Parents","Pieter Andries Groenewald & Dorothea Magdalena Cox"],["Brother","Pieter Andries Groenewald"],["Married","Susanna Maria van der Walt"],["Lived","The Free State while your dad was young, later Randfontein"],["Military","Served on the border (“die grens”) during the South African Border War"],["Work","Ran his own business, <b>Agri Services</b>, repairing farm equipment himself"],["Died","2026, Randfontein"]],
+ story:`<p>He was named after his grandfather, Coenraad Adolph (1857–1936), following the Afrikaans custom of naming the eldest son after his paternal grandfather. He's the fifth Coenraad Adolph in a direct line.</p><p>Still to find: his exact birth date and place. His birth certificate, ID book or the family Bible would show them.</p>`,
+ src:[]},
+susanna:{name:"Susanna Maria van der Walt",sub:"Your grandmother · Gen 8",status:"known",
+ facts:[["Married name","Susanna Maria Groenewald"],["Married","Coenraad Adolf Groenewald"],["Family line","Most South African van der Walts descend from Geele Andriesz van der Walt, a Frisian sailor who arrived at the Cape on 16 March 1727"]],
+ story:`<p>A <b>G.C. v.d. Walt</b> was a witness at her future in-laws' wedding in 1943, so the van der Walts and Groenewalds may have known each other a generation earlier.</p><p>Still to find: her parents' names, and when and where she was born.</p>`,
+ src:[["e-family: Geele Andriesz van der Walt","https://e-family.co.za/ffy/g6/p6827.htm"]]},
+mjvos:{name:"Marthinus Johannes Vos",sub:"Your grandfather (mother's side) · Gen 8",status:"known",
+ facts:[["Married","Elesebet Anna (Lisbe) Groenink"],["Daughter","Maryke (your mother)"]],
+ story:`<p>There are three main Vos founding families in South Africa: Johann Heinrich Vos from Osnabrück (died 1724), Jan Hendrik Vos born in Batavia (died 1765), and Jean Baptiste de Vos from Flanders. Some Vos families also came later from the Netherlands.</p><p>Still to find: when and where he was born, and his parents' names. That would show which Vos line he belongs to.</p>`,
+ src:[]},
+lisbe:{name:"Elesebet Anna Groenink (“Lisbe”)",sub:"Your grandmother (mother's side) · Gen 8",status:"known",
+ facts:[["Married name","Elesebet Anna Vos"],["Parents","Andries Johannes Groenink (1918–2000) & Wilhelmina Fransina Wilson (b. 1921), married 4 Sep 1943 in Roodepoort"],["Married","Marthinus Johannes Vos"],["Groenink origin","Steenwijk, Overijssel, Netherlands. Her great-grandfather Evert (1842–1922) and grandfather Dirk Hendrikus (1883–1946) emigrated from there to Johannesburg."],["Wilson origin","Her great-great-grandfather Benjamin Robert Wilson was born c.1836 in New York City."]],
+ story:`<p>Her Groenink family arrived from the Netherlands around 1900: her grandfather Dirk Hendrikus Groenink was born in Steenwijk in 1883 and married in Johannesburg in 1913. Before that the Groeninks lived in Steenwijk for generations; her 3× great-grandfather Andries (1793–1869) was a peat cutter there. Through her mother's side she also has an American ancestor, Benjamin Robert Wilson from New York. She had a baby brother, Yvert Hersman, who died in 1949.</p>`,
+ src:[]},
+dad:{name:"Pieter Andries Groenewald",sub:"Your father · Gen 9",status:"known",
+ facts:[["Parents","Coenraad Adolf Groenewald & Susanna Maria van der Walt"],["Married","Maryke Vos"],["Grew up","Partly in the Free State, later Randfontein"]],
+ story:`<p>He was named after his grandfather, Pieter Andries Groenewald (b. 1923), following the naming custom. The name itself goes back to his great-great-great-grandfather, Pieter Andries Swanepoel (b. 1820).</p>`,src:[]},
+mom:{name:"Maryke Vos",sub:"Your mother · Gen 9",status:"known",
+ facts:[["Married name","Maryke Groenewald"],["Parents","Marthinus Johannes Vos & Elesebet Anna (Lisbe) Groenink"]],story:"",src:[]},
+aldre:{name:"Aldre Groenewald",sub:"You · Gen 10",status:"known",
+ facts:[["Born","2003, Netcare Krugersdorp"],["Parents","Pieter Andries Groenewald & Maryke Vos"],["Generation","Generation Z"],["Heritage found so far","German (Groenewald, Loos), Dutch (Niemand, Groenink), French Huguenot (Maree, Jourdan, le Roux), Swiss (Matthee), English (Cox), plus Cape-born ancestors such as Lijsbeth van de Caab"]],
+ story:`<p>You're the <b>10th generation</b> since Christoph Grünwald arrived at the Cape in 1690, and the 9th born in South Africa. Through your great-grandparents, who were first cousins, you descend twice from William John Cox and Magdalena Swanepoel.</p>`,src:[]}
+};
+const BADGE={doc:'<span class="badge b-res">Documented in records</span>',tree:'<span class="badge b-hyp">From FamilySearch tree</span>',known:'<span class="badge b-known">Known from family</span>'};
+function openPerson(id){
+  const P=PEOPLE[id]; if(!P) return;
+  const m=document.getElementById("modal");
+  m.innerHTML=`<button class="x" aria-label="Close" onclick="closePerson()">×</button>
+   <h3>${P.name}</h3><div class="msub">${P.sub} ${BADGE[P.status]||""}</div>
+   <table>${P.facts.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("")}</table>
+   ${P.story?`<div class="story">${P.story}</div>`:""}
+   ${P.src.length?`<div class="msrc"><b>Sources:</b><br>${P.src.map(([t,u])=>`<a href="${u}">${t}</a>`).join("<br>")}</div>`:`<div class="msrc">Source: your family's own knowledge.</div>`}`;
+  document.getElementById("mbg").classList.add("open");
+}
+function closePerson(){document.getElementById("mbg").classList.remove("open");}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closePerson();});
+document.addEventListener("click",e=>{if(e.target.id==="mbg")closePerson();});
+
+const U = (rel, side, hint) => ({name:"Unknown", rel, side, status:"unk", hint});
+const people = {
+  g4: [
+    {pid:"pa1923", name:"Pieter Andries Groenewald", rel:"Great-grandfather", side:"pat", status:"known", note:"b. 29 Nov 1923, Riversdale",
+     hint:"Born 29 November 1923 and baptised 20 August 1924 in the Dutch Reformed Church at Riversdale. His parents were Coenraad Adolph Groenewald (1857–1936) and Magdalena Sophia Maria Cox (1886–1960). He was a railway worker living at Rodenbeck, near Bloemfontein, when he married his cousin Dorothea Magdalena Cox on 19 Nov 1943. Your dad was named after him."},
+    {pid:"dorothea", name:"Dorothea Magdalena Groenewald", rel:"Great-grandmother", side:"pat", status:"known", note:"née Cox · b. 27 Feb 1926, Wepener",
+     hint:"Born 27 February 1926 and baptised 9 May 1926 in Wepener. Her parents were Thomas Jesaja Cox (1888–1974) and Dorothea Magdalena de Wet (1894–1945). Her father was a witness at her wedding (T.J. Cox). She was 17, living at Plot 142, Grasland, near Bloemfontein, when she married Pieter Andries Groenewald on 19 Nov 1943. His mother was her aunt, so they were first cousins."},
+    U("Great-grandfather (van der Walt)","pat","Father of Susanna Maria. His first name is the next key to the van der Walt line."),
+    U("Great-grandmother","pat","Mother of Susanna Maria."),
+    U("Great-grandfather (Vos)","mat","Father of Marthinus Johannes Vos."),
+    U("Great-grandmother","mat","Mother of Marthinus Johannes Vos."),
+    {name:"Andries Johannes Groenink", rel:"Great-grandfather", side:"mat", status:"known", note:"1918–2000",
+     hint:"Ouma Lisbe's father. Born 15 June 1918 in Johannesburg, the son of the Dutch immigrant Dirk Hendrikus Groenink, who was born in Steenwijk, Netherlands, in 1883. Married Wilhelmina Fransina Wilson in Roodepoort on 4 Sep 1943, at an Apostolic Faith Mission service, by banns and with an antenuptial contract; he was a miner. Their baby son Yvert Hersman died in Randfontein in 1949. Died 1 Oct 2000 at Brandvlei, Randfontein. The Groenink line goes back in Steenwijk to about 1640; see the Big Tree."},
+    {name:"Wilhelmina Fransina Wilson", rel:"Great-grandmother", side:"mat", status:"known", note:"b. 1921",
+     hint:"Ouma Lisbe's mother. Born 2 Sep 1921 in the Transvaal and baptised in Potchefstroom. In 1943 she was living at 109 6de Laan, Roodepoort, when she married Andries Groenink. Her grandfather, Benjamin Robert Wilson, was born around 1836 in New York City, USA."}
+  ],
+  g3: [
+    {pid:"ca1944", name:"Coenraad Adolf Groenewald", rel:"Grandfather (father's father)", side:"pat", status:"known", note:"1944 – 2026 · Randfontein",
+     hint:"Born 1944 and died in 2026 in Randfontein. Married Susanna Maria van der Walt. The family lived in the Free State while your dad was young, then moved to Randfontein. He served on the border ('die grens') during the South African Border War (1966–1989), and he ran his own business, Agri Services, repairing farm equipment himself. He had a brother, Pieter Andries Groenewald (your great-uncle), who was named after their father. Under the Afrikaans naming custom, the eldest son takes his paternal grandfather's names. If Coenraad Adolf is the eldest, his grandfather was probably also called Coenraad Adolf. He was named after his grandfather, Coenraad Adolph Groenewald (1857–1936) of Bredasdorp and Wepener, following the naming custom."},
+    {pid:"susanna", name:"Susanna Maria Groenewald", rel:"Grandmother (father's mother)", side:"pat", status:"known", note:"née van der Walt",
+     hint:"Born a van der Walt. Most South African van der Walts descend from Geele Andriesz van der Walt, a Frisian sailor who reached the Cape in 1727. See the Van der Walt line below."},
+    {name:"Marthinus Johannes Vos", rel:"Grandfather (mother's father)", side:"mat", status:"known",
+     hint:"Your mother's father. Two Vos progenitors (stamvaders) settled at the Cape: Johann Heinrich Vos from Osnabrück, Germany (died 1724), and Jan Hendrik Vos, born in Batavia (died 1765). Some Vos families also came later from the Netherlands. His birth year and birthplace, or his father's name, would show which line is his."},
+    {pid:"lisbe", name:"Elesebet Anna Vos", rel:"Grandmother (mother's mother)", side:"mat", status:"known", note:"\"Lisbe\" · née Groenink",
+     hint:"Born Elesebet Anna Groenink and known as Lisbe. Married Marthinus Johannes Vos. Groenink is a Dutch surname from Overijssel and Drenthe in the eastern Netherlands, and it's rare in South Africa. That suggests a fairly recent Dutch immigrant in her family, perhaps her father or grandfather, arriving in the late 1800s or 1900s. Records may spell her first name Elisabeth or Elizabeth."},
+  ],
+  g2: [
+    {pid:"dad", name:"Pieter Andries Groenewald", rel:"Father", side:"pat", status:"known",
+     hint:"Named after his grandfather, Pieter Andries Groenewald, following the Afrikaans naming custom: the eldest son takes his paternal grandfather's names."},
+    {pid:"mom", name:"Maryke Groenewald", rel:"Mother", side:"mat", status:"known", note:"née Vos",
+     hint:"Her maiden name is Vos, so the Vos line comes through her father."}
+  ],
+  g1: [
+    {name:"Aldre Groenewald", rel:"You", side:"you", status:"known", note:"b. 2003, Netcare Krugersdorp",
+     hint:"Born 2003, so you're part of Generation Z (born c.1997–2012). Your parents are most likely Gen X or millennials, and your grandparents baby boomers."}
+  ]
+};
+const badge = {known:'<span class="badge b-known">Known</span>', unk:'<span class="badge b-unk">Not yet known</span>'};
+const tree = document.getElementById("tree");
+const detail = document.getElementById("detail");
+let sel=null;
+
+function card(p, cls){
+  const d=document.createElement("div");
+  d.className=`p ${p.status==="unk"?"unk":p.side} ${cls||""}`;
+  d.innerHTML=`<div class="n">${p.name}</div><div class="r">${p.rel}${p.note?" · "+p.note:""}</div>`;
+  d.onclick=()=>{ if(p.pid){openPerson(p.pid);return;} if(sel) sel.classList.remove("sel"); sel=d; d.classList.add("sel");
+    detail.innerHTML=`<h2>${p.name}${badge[p.status]}</h2>
+      <div class="k">Relationship</div><div class="v">${p.rel}</div>
+      ${p.note?`<div class="k">Details</div><div class="v">${p.note}</div>`:""}
+      <div class="k">Notes &amp; leads</div><div class="v">${p.hint||"—"}</div>`;};
+  return d;
+}
+function row(label, list, spanCls){
+  const l=document.createElement("div"); l.className="gen-label"; l.textContent=label; tree.appendChild(l);
+  const g=document.createElement("div"); g.className="gen";
+  list.forEach(p=>g.appendChild(card(p, spanCls))); tree.appendChild(g);
+}
+function conn(cls,n){const c=document.createElement("div");c.className="conn "+cls;for(let i=0;i<n;i++)c.appendChild(document.createElement("div"));tree.appendChild(c);}
+
+row("Great-grandparents", people.g4, "");
+conn("c2",4);
+row("Grandparents", people.g3, "span2");
+conn("c4",2);
+row("Parents", people.g2, "span4");
+conn("c1",1);
+row("You · Generation Z", people.g1, "center");
+</script>
+
+<script>
+(function(){
+  const W=1180, PW=232, PH=70, G=24, CW=PW*2+G, RS=112, TOP=20, LX=90, RX=W-20-CW, CX=(W-CW)/2+30;
+  const C={g:"#2f5d50",c:"#b07d1e",m:"#5b6f8f",v:"#8a4b3a",y:"#b8862b"};
+  const rows=[], lines=[];
+  // couple(row,x,[name,dates,fam],[name,dates,fam],note)
+  const couples={};
+  function couple(id,row,x,a,b,note){couples[id]={row,x,a,b,note};}
+  couple("r0",0,LX,["Christoph Grünwald","c.1670–1721 · Königsberg → Cape 1690","g","christoph"],["Catharina Niemand","of Amsterdam","m","niemand"],"m. 1691 Cape Town");
+  couple("r1",1,LX,["Coenraad Groenewald","c.1698 · Stellenbosch","g","c1698"],["Catharina Loos","1701–1734","m","loos"],"m. 1719");
+  couple("r2",2,LX,["Coenraad Groenewalt","1731–1813 · Stellenbosch","g","c1731"],["Maria Sophia Maree","1748–1812 · Huguenot line","m","maree"],"");
+  couple("r3",3,LX,["Coenraad Adolph Groenewald","1788–1840 · Riviersonderend","g","ca1788"],["Susara Johanna Matthee","1793–1860","m","matthee"],"m. 1810 Stellenbosch");
+  couple("r4",4,LX,["Casparus Johannes Groenewald","c.1830–1914 · Bredasdorp","g","casparus"],["Maria E. C. van Dyk","1838–1915","m","vandyk"],"");
+  couple("x4",4,RX,["William John Cox","1853–1943","c","wjcox"],["Magdalena S. M. Swanepoel","1854–1945","m","swanepoel"],"m. 1875 Aliwal North");
+  couple("r5",5,LX,["Coenraad Adolph Groenewald","1857–1936 · Bredasdorp, Wepener","g","ca1857"],["Magdalena Sophia Maria Cox","1886–1960","c","msmcox"],"m. 1908 Wepener");
+  couple("x5",5,RX,["Thomas Jesaja Cox","1888–1974 · Rouxville","c","thomas"],["Dorothea Magdalena de Wet","1894–1945","m","dewet"],"m. 1911 Wepener");
+  couple("r6",6,CX,["Pieter Andries Groenewald","b. 29 Nov 1923 · Riversdale","g","pa1923"],["Dorothea Magdalena Cox","b. 27 Feb 1926 · Wepener","c","dorothea"],"m. 19 Nov 1943 · Grasland, Bloemfontein");
+  couple("r7",7,LX,["Coenraad Adolf Groenewald","1944–2026 · Randfontein","g","ca1944"],["Susanna Maria van der Walt","van der Walt line · Cape 1727","m","susanna"],"");
+  couple("x7",7,RX,["Marthinus Johannes Vos","Your mother's father","v","mjvos"],["Elesebet Anna Groenink","“Lisbe”","v","lisbe"],"");
+  couple("r8",8,CX,["Pieter Andries Groenewald","Your father","g","dad"],["Maryke Vos","Your mother","v","mom"],"");
+  const ME={row:9,x:(W-PW)/2+30,name:"Aldre Groenewald",dates:"b. 2003 · Krugersdorp",fam:"y"};
+  const y=r=>TOP+r*RS;
+  const pos=(id,i)=>{const c=couples[id];return {x:c.x+(i?PW+G:0),y:y(c.row)}};
+  const mid=id=>{const c=couples[id];return {x:c.x+PW+G/2,y:y(c.row)+PH/2}};
+  // child links: [parentCouple, childCouple, childIndex]
+  const links=[["r0","r1",0],["r1","r2",0],["r2","r3",0],["r3","r4",0],["r4","r5",0],["x4","r5",1],["x4","x5",0],["r5","r6",0],["x5","r6",1],["r6","r7",0],["r7","r8",0],["x7","r8",1]];
+  let svg="";
+  const H=y(9)+PH+20;
+  // gen labels
+  for(let r=0;r<=9;r++){svg+=`<text x="8" y="${y(r)+PH/2+4}" font-size="12" fill="#7a6f63" font-family="Inter,sans-serif">Gen ${r+1}</text>`;}
+  links.forEach(([p,c,i])=>{
+    const m=mid(p), ch=pos(c,i), cx=ch.x+PW/2, ty=ch.y, my=ty-18;
+    svg+=`<path d="M${m.x} ${m.y+PH/2-8} V${my} H${cx} V${ty}" fill="none" stroke="#cbbfae" stroke-width="2"/>`;
+  });
+  { const m=mid("r8"); svg+=`<path d="M${m.x} ${m.y+PH/2-8} V${y(9)-18} H${ME.x+PW/2} V${y(9)}" fill="none" stroke="#cbbfae" stroke-width="2"/>`; }
+  function box(x,yy,name,dates,fam,pid,bold){
+    const col=C[fam];
+    const esc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    return `<g data-pid="${pid||""}"><rect x="${x}" y="${yy}" width="${PW}" height="${PH}" rx="10" fill="${fam==="y"?"#f7ecd4":"#fffdf8"}" stroke="#cbbfae"/>
+      <rect x="${x}" y="${yy}" width="5" height="${PH}" rx="2" fill="${col}"/>
+      <text x="${x+14}" y="${yy+27}" font-size="13.5" font-weight="${bold?700:600}" fill="#2a2420" font-family="Inter,sans-serif">${esc(name)}</text>
+      <text x="${x+14}" y="${yy+47}" font-size="11.5" fill="#7a6f63" font-family="Inter,sans-serif">${esc(dates)}</text></g>`;
+  }
+  Object.entries(couples).forEach(([id,c])=>{
+    const yy=y(c.row);
+    svg+=`<line x1="${c.x+PW}" y1="${yy+PH/2}" x2="${c.x+PW+G}" y2="${yy+PH/2}" stroke="#cbbfae" stroke-width="2"/>`;
+    svg+=`<text x="${c.x+PW+G/2}" y="${yy+PH/2-6}" text-anchor="middle" font-size="12" fill="#7a6f63">⚭</text>`;
+    svg+=box(c.x,yy,...c.a)+box(c.x+PW+G,yy,...c.b);
+    if(c.note) svg+=`<text x="${c.x+PW+G/2+8}" y="${yy+PH+15}" text-anchor="start" font-size="11" fill="#9a8f83" font-style="italic" font-family="Inter,sans-serif">${c.note}</text>`;
+  });
+  svg+=box(ME.x,y(9),ME.name,ME.dates,"y","aldre",true);
+  // cousins note
+  ["Magdalena & Thomas Cox were","siblings, so Pieter Andries &","Dorothea were first cousins"].forEach((t,k)=>{
+    svg+=`<text x="${W-16}" y="${y(6)+18+k*16}" text-anchor="end" font-size="11.5" fill="#b07d1e" font-family="Inter,sans-serif">${t.replace(/&/g,"&amp;")}</text>`;});
+  const el=document.getElementById("full"); el.setAttribute("viewBox",`0 0 ${W} ${H}`); el.innerHTML=svg; el.querySelectorAll("g[data-pid]").forEach(g=>g.addEventListener("click",()=>openPerson(g.dataset.pid)));
+})();
+</script>
+</body>
+</html>
